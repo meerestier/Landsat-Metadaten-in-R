@@ -22,12 +22,14 @@ library(devtools)
 library(readr)
 library(dplyr)
 require(lubridate)
+library(plyr)
+library(ggplot2)
 
+# Configure ----
 
 # Pfad bitte aendern
 setwd('data/')
 getwd()
-
 
 # Functions ---- 
 get_metadata_csv <- function (csv, path.min, path.max, row.min, row.max) {
@@ -70,16 +72,18 @@ get_metadata_xml <- function (xmlfile, path.min, path.max, row.min, row.max) {
   return(meta.sel)
 }
 
+
+# Read data ----
+
 # CHECK XML files in directory
 list.files(getwd(), pattern = "xml")
 
 
 # read xml
-metadata_landsat8.xml.sel <- get_metadata_xml('metadata_landsat8.xml', 176, 176, 36, 36)
-data <- xmlToDataFrame("metadata-landsat8.xml")
+# metadata_landsat8.xml <- get_metadata_xml('metadata_landsat8.xml', 176, 176, 36, 36)
 
 # read csv
-#metadata_landsat8.sel <- get_metadata_csv('metadata_landsat8.csv', 176, 176, 36, 36)
+# metadata_landsat8.sel <- get_metadata_csv('metadata_landsat8.csv', 176, 176, 36, 36)
 
 # loop csv files in directory
 files_csv <- list.files(getwd(), pattern = "csv")
@@ -90,25 +94,58 @@ for (i in 1:count){
   print(file)
 }
 
+# esa data is in another format
+esa_data <- read_csv('esa/esa_data.csv')
+
+attach(esa_data)
+
+esa_data_remapped <- rename(esa_data, c("Sensor"="sensor"
+                   , "Start"="acquisitionDate"
+                   , "Track"="path"
+                   , "Frame"="row"
+                   , "CloudPercentage"="cloudCover"
+))
+
+# adding columns
+esa_data_remapped$sceneCenterLatitude <- SCENE_CENTER
+esa_data_remapped$sceneCenterLongitude <- SCENE_CENTER
+esa_data_remapped$cloudCoverFull <- esa_data_remapped$cloudCover * 10
+
+esa_data_remapped <- subset(esa_data_remapped, 
+                   select=c(sensor, acquisitionDate, path, row, 
+                            sceneCenterLatitude, sceneCenterLongitude, 
+                            cloudCover, cloudCoverFull)) 
+
+esa_data_remapped$year <- format(esa_data_remapped$acquisitionDate, "%Y")
+esa_data_remapped$doy  <- yday(esa_data_remapped$acquisitionDate)
 
 
+# save as csv
+write.csv(esa_data_remapped, file = "esa/esa_data_remapped.csv")
 
 
+# Combine sources ----
+# TODO: Parameterisieren
+m <- rbind(metadata_landsat1_3.csv,
+           metadata_landsat4_5_TM.csv,
+           metadata_landsat7_slcoff.csv,
+           metadata_landsat7_slcon.csv,
+           metadata_landsat8.csv,
+           esa_data_remapped           
+)
 
-m <- rbind(L8.sel,
-           ETM_off.sel,
-           ETM_on.sel)
+# m$sensor <- gsub("LANDSAT_","",m$sensor)
+# m$sensor <- gsub("OLI_TIRS","OLI",m$sensor)
 
 # reorder path from high to low
 neworder <- c(177:175)
 
-library("plyr")
 m <- arrange(transform(m, path=factor(path,levels=neworder)),path)
 
 
-# removing scenes
-m <- subset(m, sensor !=  'TIRS') # remove scenes from 'TIRS' sensor
-m <- subset(m, cloudCover <  8) # remove scenes with a higher cloud cover then 80%
+# Removing scenes
+# m <- subset(m, sensor !=  'TIRS') # remove scenes from 'TIRS' sensor
+# m <- subset(m, cloudCover <  8) # remove scenes with a higher cloud cover then 80%
 
 
 summary(m)
@@ -122,11 +159,10 @@ size$label <- paste(size[,5], "GB)", sep=" ")
 sum(size$GB)
 
 
-library(ggplot2)
-p <- ggplot(m, aes(x = doy, y = year, size=cloudCover)) 
+p <- ggplot(m, aes(x = doy, y = year, size=1/cloudCover+1)) # smaller dots for greater cloud Cover
 p <- p + scale_shape_identity() + facet_grid(row ~ path)
 p <- p + geom_point(alpha = 8/10, aes(shape = 15, colour=sensor)) + theme_bw()
-p <- p + scale_y_discrete(name= "Year", breaks=seq(1999, 2015, 4))
+p <- p + scale_y_discrete(name= "Year", breaks=seq(1970, 2020, 5))
 p <- p + scale_x_discrete(name= "Day of Year", breaks= seq(0, 365, 100))
 p <- p + scale_size_continuous(name="Cloud Cover [%]")
 p <- p + scale_color_discrete(name="Sensor Type", labels=c(size$label)) # add GB to the legend
@@ -139,4 +175,7 @@ p <- p + theme(#legend.justification=c(1,0),
 p <- p + guides(colour = guide_legend(override.aes = list(size=5)))
 p
 
+# Output files ----
 
+# save as csv
+write.csv(m, file = "output/output_combined.csv")

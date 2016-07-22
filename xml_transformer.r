@@ -10,5 +10,4 @@ install.packages("XML")
 library("XML")
 
 #read XML
-data <- xmlParse("data/metadata.xml")
-xml_data <- xmlToList(data)
+data <- xmlToDataFrame("data/metadata.xml")
