@@ -1,7 +1,7 @@
 # Script to visualize the available Landsat Scenes for certain
 # WRS-2 Path and Row pairs;
-# Developed by Ph. G?rtner (gaertner.p@gmail.com)
-# In Berlin, Germany, 19th of July 2016.
+# Developed by Ph. Gärtner (gaertner.p@gmail.com), in Berlin, Germany, 19th of July 2016.
+# Extended by Lars Schulz (lars@larsschulz.info), 16-07-22
 # Inputs:  Collection of Metadata provided as .csv dataset via
 #  --- http://landsat.usgs.gov/metadatalist.php; 
 # Output: A ggplot figure day of the year against sensor availability
@@ -103,13 +103,14 @@ esa_data_remapped <- rename(esa_data, c("Sensor"="sensor"
                    , "Start"="acquisitionDate"
                    , "Track"="path"
                    , "Frame"="row"
-                   , "CloudPercentage"="cloudCover"
+                   , "CloudPercentage"="cloudCoverFull"
 ))
 
 # adding columns
+# TOODO split SCENE_CENTER
 esa_data_remapped$sceneCenterLatitude <- SCENE_CENTER
 esa_data_remapped$sceneCenterLongitude <- SCENE_CENTER
-esa_data_remapped$cloudCoverFull <- esa_data_remapped$cloudCover * 10
+esa_data_remapped$cloudCover <- as.integer(esa_data_remapped$cloudCoverFull / 10)
 
 esa_data_remapped <- subset(esa_data_remapped, 
                    select=c(sensor, acquisitionDate, path, row, 
@@ -133,6 +134,8 @@ m <- rbind(metadata_landsat1_3.csv,
            metadata_landsat8.csv,
            esa_data_remapped           
 )
+
+attach(m)
 
 # m$sensor <- gsub("LANDSAT_","",m$sensor)
 # m$sensor <- gsub("OLI_TIRS","OLI",m$sensor)
@@ -159,9 +162,9 @@ size$label <- paste(size[,5], "GB)", sep=" ")
 sum(size$GB)
 
 
-p <- ggplot(m, aes(x = doy, y = year, size=1/cloudCover+1)) # smaller dots for greater cloud Cover
+p <- ggplot(m, aes(x = doy, y = year, size=cloudCoverFull)) # smaller dots for greater cloud Cover
 p <- p + scale_shape_identity() + facet_grid(row ~ path)
-p <- p + geom_point(alpha = 8/10, aes(shape = 15, colour=sensor)) + theme_bw()
+p <- p + geom_point(alpha = 8/10, aes(shape = 16, colour=sensor)) + theme_bw()
 p <- p + scale_y_discrete(name= "Year", breaks=seq(1970, 2020, 5))
 p <- p + scale_x_discrete(name= "Day of Year", breaks= seq(0, 365, 100))
 p <- p + scale_size_continuous(name="Cloud Cover [%]")
@@ -179,3 +182,7 @@ p
 
 # save as csv
 write.csv(m, file = "output/output_combined.csv")
+
+# save an image
+dev.copy(png,'output/output_combined.png')
+
