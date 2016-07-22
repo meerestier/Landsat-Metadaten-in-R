@@ -32,11 +32,6 @@ getwd()
 # Functions ---- 
 get_metadata_csv <- function (csv, path.min, path.max, row.min, row.max) {
   
-  #setwd('data')
-  library(dplyr)
-  require(lubridate)
-  library(readr)
-  
   x <- read_csv(csv)
   
   meta.sel <- subset(x, 
@@ -57,6 +52,9 @@ get_metadata_csv <- function (csv, path.min, path.max, row.min, row.max) {
 get_metadata_xml <- function (xmlfile, path.min, path.max, row.min, row.max) {
   
   x <- xmlToDataFrame(xmlfile)
+  #drop 1. line
+  x <- x[-1,]
+
   
   meta.sel <- subset(x, 
                      path >= path.min & path <= path.max & row >= row.min & row <= row.max, 
@@ -75,20 +73,23 @@ get_metadata_xml <- function (xmlfile, path.min, path.max, row.min, row.max) {
 # CHECK XML files in directory
 list.files(getwd(), pattern = "xml")
 
-# metadata-combined.xml
-# metadata-landsat1_3.xml
-# metadata-landsat4_5_MMS.xml
-# metadata-landsat4_5_TM.xml
-# metadata-landsat7_slcoff.xml
-# metadata-landsat7_slcon.xml
-# metadata-landsat8.xml
 
 # read xml
-metadata-landsat8.xml.sel <- get_metadata_xml('metadata-landsat8.xml', 176, 176, 36, 36)
+metadata_landsat8.xml.sel <- get_metadata_xml('metadata_landsat8.xml', 176, 176, 36, 36)
+data <- xmlToDataFrame("metadata-landsat8.xml")
 
 # read csv
-ETM_on.sel <- get_metadata_csv('Landsat_7.csv', 176, 176, 36, 36)
-ETM_off.sel <- get_metadata_csv('LANDSAT_ETM_SLC_OFF.csv', 176, 176, 36, 36)
+#metadata_landsat8.sel <- get_metadata_csv('metadata_landsat8.csv', 176, 176, 36, 36)
+
+# loop csv files in directory
+files_csv <- list.files(getwd(), pattern = "csv")
+count <- length(files_csv)
+for (i in 1:count){
+  file <- files_csv[i]
+  assign(file, get_metadata_csv(file, 176, 176, 36, 36))
+  print(file)
+}
+
 
 
 
