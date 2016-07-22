@@ -1,0 +1,7 @@
+"","   sensor","acquisitionDate"," path","     row","sceneCenterLatitude","sceneCenterLongitude","  cloudCover","cloudCoverFull","    year","     doy"
+"","Length:974        ","Min.   :1972-09-04  ","177:  0  ","Min.   :36  ","Length:974        ","Length:974        ","Min.   : 0.000  ","Min.   :  0.00  ","Length:974        ","Min.   :  1.0  "
+"","Class :character  ","1st Qu.:1993-12-06  ","176:974  ","1st Qu.:36  ","Class :character  ","Class :character  ","1st Qu.: 0.000  ","1st Qu.:  0.09  ","Class :character  ","1st Qu.: 96.0  "
+"","Mode  :character  ","Median :2001-08-10  ","175:  0  ","Median :36  ","Mode  :character  ","Mode  :character  ","Median : 0.000  ","Median :  3.00  ","Mode  :character  ","Median :186.5  "
+"",NA,"Mean   :2001-02-20  ",NA,"Mean   :36  ",NA,NA,"Mean   : 1.035  ","Mean   : 13.26  ",NA,"Mean   :184.9  "
+"",NA,"3rd Qu.:2009-08-04  ",NA,"3rd Qu.:36  ",NA,NA,"3rd Qu.: 1.000  ","3rd Qu.: 18.73  ",NA,"3rd Qu.:274.0  "
+"",NA,"Max.   :2016-07-18  ",NA,"Max.   :36  ",NA,NA,"Max.   :10.000  ","Max.   :100.00  ",NA,"Max.   :365.0  "

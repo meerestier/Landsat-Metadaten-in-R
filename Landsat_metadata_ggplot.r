@@ -182,6 +182,7 @@ p
 
 # save as csv
 write.csv(m, file = "output/output_combined.csv")
+write.csv(summary(m), file = "output/output_summary.csv")
 
 # save an image
 dev.copy(png,'output/output_combined.png')
