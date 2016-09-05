@@ -40,7 +40,7 @@ get_metadata_csv <- function (csv, path.min, path.max, row.min, row.max) {
                      path >= path.min & path <= path.max & row >= row.min & row <= row.max, 
                      select=c(sensor, acquisitionDate, path, row, 
                               sceneCenterLatitude, sceneCenterLongitude, 
-                              cloudCover, cloudCoverFull)) 
+                              cloudCover, cloudCoverFull, browseURL)) 
   
   #meta.sel$cloudfree <- as.numeric(meta.sel$cloudCoverFull)
   
@@ -107,7 +107,7 @@ esa_data_remapped <- rename(esa_data, c("Sensor"="sensor"
 ))
 
 # adding columns
-# TOODO split SCENE_CENTER
+# TODO split SCENE_CENTER
 esa_data_remapped$sceneCenterLatitude <- SCENE_CENTER
 esa_data_remapped$sceneCenterLongitude <- SCENE_CENTER
 esa_data_remapped$cloudCover <- as.integer(esa_data_remapped$cloudCoverFull / 10)
@@ -119,6 +119,7 @@ esa_data_remapped <- subset(esa_data_remapped,
 
 esa_data_remapped$year <- format(esa_data_remapped$acquisitionDate, "%Y")
 esa_data_remapped$doy  <- yday(esa_data_remapped$acquisitionDate)
+esa_data_remapped$browseURL  <- esa_data$PRODUCT_URL
 
 
 # save as csv
@@ -181,8 +182,8 @@ p
 # Output files ----
 
 # save as csv
-write.csv(m, file = "output/output_combined.csv")
-write.csv(summary(m), file = "output/output_summary.csv")
+write.csv(m, file = "output/output_combined.csv") # Consolidated sensor data
+write.csv(summary(m), file = "output/output_summary.csv") # Summary of data
 
 # save an image
 dev.copy(png,'output/output_combined.png')
