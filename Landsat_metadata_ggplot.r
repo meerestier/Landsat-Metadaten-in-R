@@ -38,7 +38,7 @@ get_metadata_csv <- function (csv, path.min, path.max, row.min, row.max) {
   
   meta.sel <- subset(x, 
                      path >= path.min & path <= path.max & row >= row.min & row <= row.max, 
-                     select=c(sensor, acquisitionDate, path, row, 
+                     select=c(sensor, sceneID, acquisitionDate, path, row, 
                               sceneCenterLatitude, sceneCenterLongitude, 
                               cloudCover, cloudCoverFull, browseURL)) 
   
@@ -60,7 +60,7 @@ get_metadata_xml <- function (xmlfile, path.min, path.max, row.min, row.max) {
   
   meta.sel <- subset(x, 
                      path >= path.min & path <= path.max & row >= row.min & row <= row.max, 
-                     select=c(sensor, acquisitionDate, path, row, 
+                     select=c(sensor, sceneID, acquisitionDate, path, row, 
                               sceneCenterLatitude, sceneCenterLongitude, 
                               cloudCover, cloudCoverFull)) 
   
@@ -86,6 +86,8 @@ list.files(getwd(), pattern = "xml")
 # metadata_landsat8.sel <- get_metadata_csv('metadata_landsat8.csv', 176, 176, 36, 36)
 
 # loop csv files in directory
+a <- file.choose()
+a <- dirname(a)
 files_csv <- list.files(getwd(), pattern = "csv")
 count <- length(files_csv)
 for (i in 1:count){
@@ -104,6 +106,7 @@ esa_data_remapped <- rename(esa_data, c("Sensor"="sensor"
                    , "Track"="path"
                    , "Frame"="row"
                    , "CloudPercentage"="cloudCoverFull"
+                   , "ACQUISITIONDESCRIPTOR"="sceneID"
 ))
 
 # adding columns
@@ -113,7 +116,7 @@ esa_data_remapped$sceneCenterLongitude <- SCENE_CENTER
 esa_data_remapped$cloudCover <- as.integer(esa_data_remapped$cloudCoverFull / 10)
 
 esa_data_remapped <- subset(esa_data_remapped, 
-                   select=c(sensor, acquisitionDate, path, row, 
+                   select=c(sensor, sceneID, acquisitionDate, path, row, 
                             sceneCenterLatitude, sceneCenterLongitude, 
                             cloudCover, cloudCoverFull)) 
 
@@ -145,7 +148,6 @@ attach(m)
 neworder <- c(177:175)
 
 m <- arrange(transform(m, path=factor(path,levels=neworder)),path)
-
 
 # Removing scenes
 # m <- subset(m, sensor !=  'TIRS') # remove scenes from 'TIRS' sensor
@@ -184,6 +186,10 @@ p
 # save as csv
 write.csv(m, file = "output/output_combined.csv") # Consolidated sensor data
 write.csv(summary(m), file = "output/output_summary.csv") # Summary of data
+
+# save scene list for http://earthexplorer.usgs.gov/filelist
+scenes <- m$sceneID
+  write.csv(scenes, file = "output/usgs_scenes.csv") # sceneID 
 
 # save an image
 dev.copy(png,'output/output_combined.png')
